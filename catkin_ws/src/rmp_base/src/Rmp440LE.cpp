@@ -3,25 +3,25 @@
 
   Software License Agreement:
 
-  The software supplied herewith by Segway Inc. (the "Company") for its 
-  RMP Robotic Platforms is intended and supplied to you, the Company's 
-  customer, for use solely and exclusively with Segway products. The 
-  software is owned by the Company and/or its supplier, and is protected 
-  under applicable copyright laws.  All rights are reserved. Any use in 
+  The software supplied herewith by Segway Inc. (the "Company") for its
+  RMP Robotic Platforms is intended and supplied to you, the Company's
+  customer, for use solely and exclusively with Segway products. The
+  software is owned by the Company and/or its supplier, and is protected
+  under applicable copyright laws.  All rights are reserved. Any use in
   violation of the foregoing restrictions may subject the user to criminal
-  sanctions under applicable laws, as well as to civil liability for the 
-  breach of the terms and conditions of this license. The Company may 
-  immediately terminate this Agreement upon your use of the software with 
+  sanctions under applicable laws, as well as to civil liability for the
+  breach of the terms and conditions of this license. The Company may
+  immediately terminate this Agreement upon your use of the software with
   any products that are not Segway products.
 
-  You shall indemnify, defend and hold the Company harmless from any claims, 
-  demands, liabilities or expenses, including reasonable attorneys fees, incurred 
-  by the Company as a result of any claim or proceeding against the Company 
-  arising out of or based upon: 
+  You shall indemnify, defend and hold the Company harmless from any claims,
+  demands, liabilities or expenses, including reasonable attorneys fees, incurred
+  by the Company as a result of any claim or proceeding against the Company
+  arising out of or based upon:
 
-  (i) The combination, operation or use of the software by you with any hardware, 
-      products, programs or data not supplied or approved in writing by the Company, 
-      if such claim or proceeding would have been avoided but for such combination, 
+  (i) The combination, operation or use of the software by you with any hardware,
+      products, programs or data not supplied or approved in writing by the Company,
+      if such claim or proceeding would have been avoided but for such combination,
       operation or use.
 
   (ii) The modification of the software by or on behalf of you.
@@ -49,7 +49,7 @@
 #include <RmpConfigurationCommand.h>
 
 // Constant definitions
-static const int PORT_NUMBER_MAX = 65536; 
+static const int PORT_NUMBER_MAX = 65536;
 static const double UPDATE_FREQUENCY_MIN = 0.5; // [Hz]
 static const double UPDATE_FREQUENCY_MAX = 100.0; // [Hz]
 static const double G_TO_M_S2 = 9.80665;
@@ -63,9 +63,9 @@ static const std::string RIGHT_FRONT_WHEEL_JOINT_NAME("right_front_wheel");
 static const std::string LEFT_REAR_WHEEL_JOINT_NAME("left_rear_wheel");
 static const std::string RIGHT_REAR_WHEEL_JOINT_NAME("right_rear_wheel");
 static const size_t LEFT_FRONT_WHEEL_IDX = 0;
-static const size_t RIGHT_FRONT_WHEEL_IDX = 1; 
+static const size_t RIGHT_FRONT_WHEEL_IDX = 1;
 static const size_t LEFT_REAR_WHEEL_IDX = 2;
-static const size_t RIGHT_REAR_WHEEL_IDX = 3; 
+static const size_t RIGHT_REAR_WHEEL_IDX = 3;
 
 Rmp440LE::Rmp440LE()
   : m_NodeHandle("~")
@@ -85,7 +85,7 @@ void Rmp440LE::Initialize()
   int portNumber;
   std::string odometryTopic, jointStatesTopic, inertialTopic, pseTopic, motorStatusTopic, batteryTopic, velocityCommandTopic, deadmanTopic, audioCommandTopic, faultStatusTopic;
   double updateFrequency, maxTranslationalVelocity, maxTurnRate;
-  
+
   m_NodeHandle.param("transport_type", transportType, std::string("udp"));
   m_NodeHandle.param("ip_address", ipAddress, std::string("192.168.0.40"));
   m_NodeHandle.param("port_number", portNumber, 8080);
@@ -105,7 +105,7 @@ void Rmp440LE::Initialize()
   m_NodeHandle.param("max_turn_rate", maxTurnRate, 4.4);
 
   // Start communication
-  try 
+  try
   {
     if (transportType == std::string("udp"))
     {
@@ -114,7 +114,7 @@ void Rmp440LE::Initialize()
         ROS_ERROR_STREAM("Invalid port number: " << portNumber << " should be between 0 and " << PORT_NUMBER_MAX);
         return;
       }
-      
+
       m_Rmp440LEInterface.Initialize(ipAddress, static_cast<uint16_t>(portNumber));
     }
     else if (transportType == std::string("usb"))
@@ -126,7 +126,7 @@ void Rmp440LE::Initialize()
       ROS_ERROR_STREAM("Unknown/unsupported transport: " << transportType);
       return;
     }
-    
+
     m_Rmp440LEInterface.ResetParamsToDefault();
 
     m_Rmp440LEInterface.SetConfiguration(segway::RmpConfigurationCommandSet::SET_AUDIO_COMMAND, static_cast<uint32_t>(segway::MOTOR_AUDIO_TEST_SWEEP));
@@ -171,7 +171,7 @@ void Rmp440LE::Initialize()
     m_VelocityCommandSubscriber = m_NodeHandle.subscribe<geometry_msgs::TwistStamped>(velocityCommandTopic, 1, &Rmp440LE::ProcessVelocityCommand, this);
     m_DeadmanSubscriber = m_NodeHandle.subscribe<rmp_msgs::BoolStamped>(deadmanTopic, 1, &Rmp440LE::ProcessDeadman, this);
     m_AudioCommandSubscriber = m_NodeHandle.subscribe<rmp_msgs::AudioCommand>(audioCommandTopic, 1, &Rmp440LE::ProcessAudioCommand, this);
-    
+
     if (updateFrequency < UPDATE_FREQUENCY_MIN)
     {
       updateFrequency = UPDATE_FREQUENCY_MIN;
@@ -180,7 +180,7 @@ void Rmp440LE::Initialize()
     {
       updateFrequency = UPDATE_FREQUENCY_MAX;
     }
-    
+
     ros::Rate rate(updateFrequency);
 
     InitializeMessages();
@@ -188,7 +188,7 @@ void Rmp440LE::Initialize()
     ros::Time lastUpdate = ros::Time::now();
     ros::Duration maxUpdatePeriod(MAX_UPDATE_PERIOD);
     bool forceUpdate = false;
-    
+
     // Processing loop
     while (ros::ok())
     {
@@ -208,8 +208,8 @@ void Rmp440LE::Initialize()
 
       rate.sleep();
     }
-  } 
-  catch (std::exception& rException) 
+  }
+  catch (std::exception& rException)
   {
     ROS_ERROR_STREAM("Exception caught: " << rException.what() << ". Will return.");
     return;
@@ -224,7 +224,7 @@ void Rmp440LE::InitializeMessages()
   m_NodeHandle.param("odometry_frame", odometryFrame, std::string("/rmp440le/odom"));
   m_NodeHandle.param("inertial_frame", inertialFrame, std::string("/rmp440le/inertial"));
   m_NodeHandle.param("pse_frame", pseFrame, std::string("/rmp440le/pse"));
-  
+
   m_OdometryMsg.header.frame_id = odometryFrame;
   m_OdometryMsg.child_frame_id = baseFrame;
   m_OdometryMsg.pose.pose = geometry_msgs::Pose();
@@ -266,14 +266,14 @@ void Rmp440LE::ProcessVelocityCommand(const geometry_msgs::TwistStamped::ConstPt
   {
     return;
   }
-  
+
   if (m_Rmp440LEInterface.GetUserDefinedFeedback<uint32_t>(segway::OPERATIONAL_STATE) != segway::TRACTOR_MODE)
   {
     ROS_WARN_STREAM("Velocity command won't be processed. The rmp is in " << m_Rmp440LEInterface.GetUserDefinedFeedback<uint32_t>(segway::OPERATIONAL_STATE) << " mode and should be in " << segway::TRACTOR_MODE << " (TRACTOR)");
 
     return;
   }
-  
+
   float maximumVelocity = m_Rmp440LEInterface.GetMaximumVelocity();
   float maximumTurnRate = m_Rmp440LEInterface.GetMaximumTurnRate();
 
@@ -281,21 +281,21 @@ void Rmp440LE::ProcessVelocityCommand(const geometry_msgs::TwistStamped::ConstPt
   {
     std::stringstream stringStream;
     stringStream << "Invalid max velocity/turn rate: " << maximumVelocity << "/" << maximumTurnRate;
-    
+
     throw std::logic_error(stringStream.str());
   }
-  
+
   float normalizedVelocity = static_cast<float>(rpVelocityCommand->twist.linear.x) / maximumVelocity;
   // Segway defines yaw as negative z
   float normalizedYawRate = -1.0 * static_cast<float>(rpVelocityCommand->twist.angular.z) / maximumTurnRate;
-  
+
   if ((normalizedVelocity > fabs(1.0)) || (normalizedYawRate > fabs(1.0)))
   {
     ROS_WARN_STREAM("Velocity command out of range: " << rpVelocityCommand->twist.linear.x << ", " << rpVelocityCommand->twist.angular.z << " should be within: " << maximumVelocity << " [m/s], " << maximumTurnRate << " [rad/s]");
-    
+
     return;
   }
-  
+
   m_Rmp440LEInterface.SetVelocity(normalizedVelocity, normalizedYawRate);
 }
 
@@ -307,14 +307,14 @@ void Rmp440LE::ProcessDeadman(const rmp_msgs::BoolStamped::ConstPtr& rpDeadmanMs
 void Rmp440LE::ProcessAudioCommand(const rmp_msgs::AudioCommand::ConstPtr& rpAudioCommand)
 {
   uint32_t command = rpAudioCommand->command;
-      
+
   if ((command < segway::MOTOR_AUDIO_PLAY_NO_SONG) || (command > segway::MOTOR_AUDIO_SIMULATE_MOTOR_NOISE))
   {
     ROS_WARN_STREAM("Invalid audio command received: " << command << " should be between " << segway::MOTOR_AUDIO_PLAY_NO_SONG << " and " << segway::MOTOR_AUDIO_SIMULATE_MOTOR_NOISE << ". Won't be processed.");
 
     return;
   }
-  
+
   m_Rmp440LEInterface.SetConfiguration(segway::RmpConfigurationCommandSet::SET_AUDIO_COMMAND, command);
 }
 
@@ -357,7 +357,7 @@ void Rmp440LE::UpdateImu()
   m_InertialPublisher.publish(m_InertialMsg);
 }
 
-void Rmp440LE::UpdateOdometry()  
+void Rmp440LE::UpdateOdometry()
 {
   double linearDisplacement = static_cast<double>(m_Rmp440LEInterface.GetUserDefinedFeedback<float>(segway::LINEAR_POS_M));
   double leftFrontDisplacement = static_cast<double>(m_Rmp440LEInterface.GetUserDefinedFeedback<float>(segway::LEFT_FRONT_POS_M));
@@ -399,7 +399,7 @@ void Rmp440LE::UpdateOdometry()
   m_WheelsDisplacement.m_RightRear = rightRearDisplacement;
 
   double inverseRadius = 2.0 / static_cast<double>(m_Rmp440LEInterface.GetUserDefinedFeedback<float>(segway::FRAM_TIRE_DIAMETER_M));
-  
+
   m_JointStateMsg.position[LEFT_FRONT_WHEEL_IDX] = inverseRadius * leftFrontDisplacement;
   m_JointStateMsg.position[RIGHT_FRONT_WHEEL_IDX] = inverseRadius * rightFrontDisplacement;
   m_JointStateMsg.position[LEFT_REAR_WHEEL_IDX] = inverseRadius * leftRearDisplacement;
@@ -435,14 +435,14 @@ void Rmp440LE::UpdateBattery()
   batteryMsg.abb_system_status = m_Rmp440LEInterface.GetUserDefinedFeedback<uint32_t>(segway::ABB_SYSTEM_STATUS);
   batteryMsg.aux_battery_status = m_Rmp440LEInterface.GetUserDefinedFeedback<uint32_t>(segway::AUX_BATT_STATUS);
   batteryMsg.header.stamp = ros::Time::now();
-  
+
   m_BatteryPublisher.publish(batteryMsg);
 }
 
 void Rmp440LE::UpdateMotorStatus()
 {
   rmp_msgs::MotorStatus motorStatus;
-  // Current 
+  // Current
   motorStatus.current[rmp_msgs::MotorStatus::RIGHT_FRONT_IDX] = m_Rmp440LEInterface.GetUserDefinedFeedback<float>(segway::RIGHT_FRONT_CURRENT_A0PK);
   motorStatus.current[rmp_msgs::MotorStatus::LEFT_FRONT_IDX] = m_Rmp440LEInterface.GetUserDefinedFeedback<float>(segway::LEFT_FRONT_CURRENT_A0PK);
   motorStatus.current[rmp_msgs::MotorStatus::RIGHT_REAR_IDX] = m_Rmp440LEInterface.GetUserDefinedFeedback<float>(segway::RIGHT_REAR_CURRENT_A0PK);
@@ -482,7 +482,7 @@ void Rmp440LE::UpdateFaultStatus()
 bool Rmp440LE::IsDeadmanValid()
 {
   ros::Duration duration = ros::Time::now() - m_DeadmanMsg.header.stamp;
-  
+
   if ( m_DeadmanMsg.data &&
        (duration < ros::Duration(DEADMAN_VALIDITY_PERIOD)) )
   {
