@@ -267,7 +267,7 @@ void Rmp440LE::ProcessVelocityCommand(const geometry_msgs::TwistStamped::ConstPt
     return;
   }
 
-  if (m_Rmp440LEInterface.GetUserDefinedFeedback<uint32_t>(segway::OPERATIONAL_STATE) != segway::TRACTOR_MODE)
+  if ( (m_Rmp440LEInterface.GetUserDefinedFeedback<uint32_t>(segway::OPERATIONAL_STATE) != segway::TRACTOR_MODE) && (m_Rmp440LEInterface.GetUserDefinedFeedback<uint32_t>(segway::OPERATIONAL_STATE) != segway::BALANCE_MODE) )
   {
     ROS_WARN_STREAM("Velocity command won't be processed. The rmp is in " << m_Rmp440LEInterface.GetUserDefinedFeedback<uint32_t>(segway::OPERATIONAL_STATE) << " mode and should be in " << segway::TRACTOR_MODE << " (TRACTOR)");
 
